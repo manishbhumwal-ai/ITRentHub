@@ -825,6 +825,6 @@ app.patch("/api/manage/products/:id", requireAdmin, (req, res) => {
     id
   );
 
-  res.json({
+    res.json({
     product: db.prepare(
       "SELECT * FR

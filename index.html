@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1f3a">
+<meta name="description" content="ITRentHub — rent IT equipment with flexible daily pricing.">
+<title>ITRentHub | IT Equipment on Rent</title>
+<style>
+:root{--navy:#0b1f3a;--blue:#1769e0;--cyan:#21c4d8;--ink:#152238;--muted:#66758a;--bg:#f4f7fb;--line:#e3eaf3;--white:#fff;--green:#0d9b75}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}button,input,select,textarea{font:inherit}button,a{cursor:pointer}a{text-decoration:none;color:inherit}.wrap{width:min(1160px,92%);margin:auto}
+.topbar{background:#07162b;color:#dce8fa;font-size:12px;padding:9px 0}.topbar .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header{background:#fff;position:sticky;top:0;z-index:10;border-bottom:1px solid var(--line)}.nav{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0}.brand{display:flex;align-items:center;gap:10px;font-weight:850;font-size:21px;letter-spacing:-.7px}.logo{width:39px;height:39px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:grid;place-items:center;color:white;font-weight:900;font-size:19px;box-shadow:0 8px 20px #1769e033}.brand span span{color:var(--blue)}.navlinks{display:flex;gap:24px;font-size:14px;font-weight:650;color:#536177}.navlinks a:hover{color:var(--blue)}.navright{display:flex;gap:10px;align-items:center}.btn{border:0;border-radius:11px;padding:12px 17px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.2s}.btn-primary{background:var(--blue);color:#fff;box-shadow:0 7px 16px #1769e028}.btn-primary:hover{background:#0d56c3;transform:translateY(-1px)}.btn-light{background:#edf4ff;color:#1457b8}.btn-outline{background:white;border:1px solid var(--line);color:var(--ink)}.menu-btn{display:none;background:#eef4fc;border:0;padding:10px;border-radius:10px}
+.hero{background:radial-gradient(circle at 85% 15%,#214f87 0,transparent 30%),linear-gradient(120deg,#091b33,#0d2d50 68%,#0b3e62);color:#fff;padding:70px 0 62px;overflow:hidden;position:relative}.hero:after{content:"";position:absolute;width:380px;height:380px;border:1px solid #ffffff1c;border-radius:50%;right:-90px;bottom:-200px;box-shadow:0 0 0 45px #ffffff08,0 0 0 90px #ffffff05}.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:35px;position:relative;z-index:1}.eyebrow{display:inline-flex;align-items:center;gap:8px;background:#ffffff13;border:1px solid #ffffff25;padding:8px 12px;border-radius:99px;font-size:12px;font-weight:750;color:#c7eaff}.dot{width:7px;height:7px;background:#47e0bd;border-radius:50%}.hero h1{font-size:clamp(36px,5vw,60px);line-height:1.04;letter-spacing:-2px;margin:20px 0 17px;max-width:670px}.hero h1 em{font-style:normal;color:#65d7e9}.hero p{font-size:16px;line-height:1.7;color:#c8d6e8;max-width:580px;margin:0 0 26px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap}.hero .btn-light{background:#ffffff;color:#0c2544}.hero .btn-outline{background:#ffffff0d;border-color:#ffffff44;color:white}.hero-note{font-size:12px;color:#a9bed5;margin-top:16px}.hero-art{min-height:310px;display:grid;place-items:center;position:relative}.device-card{width:min(360px,100%);background:linear-gradient(145deg,#ffffff22,#ffffff08);border:1px solid #ffffff32;border-radius:24px;padding:22px;backdrop-filter:blur(10px);box-shadow:0 25px 60px #0003;transform:rotate(2deg)}.device-top{display:flex;justify-content:space-between;align-items:center;color:#d6e9ff;font-size:12px}.device-screen{height:170px;background:linear-gradient(135deg,#172b4b,#2869a5);border:7px solid #19263a;border-radius:12px;margin:18px 0 8px;display:grid;place-items:center;position:relative;overflow:hidden}.device-screen:before,.device-screen:after{content:"";position:absolute;border-radius:50%;background:#26c6da55}.device-screen:before{width:190px;height:190px;left:-45px;top:-80px}.device-screen:after{width:160px;height:160px;right:-25px;bottom:-90px}.screen-mark{font-weight:900;font-size:24px;letter-spacing:-1px;z-index:1}.laptop-base{height:13px;background:linear-gradient(#bdc9d7,#64768d);width:112%;margin-left:-6%;border-radius:0 0 18px 18px}.float-tag{position:absolute;background:#fff;color:var(--ink);border-radius:13px;padding:12px 14px;box-shadow:0 12px 35px #0003;font-size:12px;font-weight:750}.float-tag strong{display:block;font-size:15px;color:var(--blue);margin-top:3px}.tag-one{left:-5px;top:45px}.tag-two{right:-6px;bottom:28px}
+.trustbar{background:white;border-bottom:1px solid var(--line)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);padding:20px 0;gap:12px}.trust-item{display:flex;align-items:center;gap:10px;justify-content:center;color:#526176;font-size:13px;font-weight:700}.trust-icon{width:35px;height:35px;border-radius:10px;background:#edf5ff;color:var(--blue);display:grid;place-items:center;font-size:17px}
+section{padding:65px 0}.section-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:25px}.kicker{color:var(--blue);text-transform:uppercase;font-size:11px;font-weight:850;letter-spacing:1.6px}.section-head h2{font-size:clamp(25px,3vw,35px);letter-spacing:-1px;margin:8px 0 0}.section-head p{color:var(--muted);margin:9px 0 0;line-height:1.6}.categories{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.category{background:#fff;border:1px solid var(--line);border-radius:16px;padding:21px 16px;transition:.2s;text-align:left}.category:hover{transform:translateY(-3px);border-color:#b7d2fa;box-shadow:0 12px 30px #143e7610}.cat-icon{width:48px;height:48px;border-radius:14px;background:#edf5ff;display:grid;place-items:center;font-size:24px;margin-bottom:15px}.category h3{font-size:14px;margin:0 0 5px}.category p{font-size:12px;color:var(--muted);margin:0}
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.product{background:white;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:.2s}.product:hover{transform:translateY(-3px);box-shadow:0 15px 35px #143e7610}.product-visual{height:170px;background:linear-gradient(135deg,#e9f2ff,#f8fbff);display:grid;place-items:center;position:relative}.product-visual .emoji{font-size:76px;filter:drop-shadow(0 10px 8px #18395b16)}.badge{position:absolute;left:13px;top:13px;background:#fff;color:#1769e0;border-radius:7px;padding:6px 8px;font-size:10px;font-weight:850}.product-body{padding:18px}.product-type{color:var(--blue);font-size:10px;text-transform:uppercase;font-weight:850;letter-spacing:1px}.product h3{margin:7px 0;font-size:17px}.product-desc{color:var(--muted);font-size:12px;line-height:1.5;min-height:36px}.price-row{display:flex;align-items:end;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:14px;margin-top:14px}.price{font-size:22px;font-weight:850;letter-spacing:-.7px}.price small{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:0}.deposit{font-size:11px;color:var(--muted);margin-top:5px}.product .btn{padding:10px 12px;font-size:12px}
+.how{background:#fff}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.step{padding:23px;border:1px solid var(--line);border-radius:16px;background:#fbfdff}.step-no{width:39px;height:39px;background:var(--navy);color:white;border-radius:12px;display:grid;place-items:center;font-weight:850;margin-bottom:17px}.step h3{font-size:15px;margin:0 0 8px}.step p{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
+.cta{padding:0 0 65px}.cta-box{background:linear-gradient(110deg,#0b1f3a,#1555a1);border-radius:24px;padding:35px 40px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:25px}.cta-box h2{font-size:clamp(23px,3vw,32px);margin:0 0 9px}.cta-box p{margin:0;color:#c6d9f0;line-height:1.6}.cta-box .btn{flex-shrink:0}
+footer{background:#07162b;color:#d7e4f5;padding:48px 0 20px}.footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:30px;padding-bottom:35px}.footer-brand p{font-size:13px;color:#9fb2ca;line-height:1.7;max-width:290px}.footer-title{font-size:13px;color:#fff;font-weight:800;margin-bottom:15px}.footer-links{display:grid;gap:11px;color:#9fb2ca;font-size:12px}.footer-links a:hover{color:#fff}.footer-bottom{border-top:1px solid #ffffff18;padding-top:18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#8299b5;font-size:11px}
+.modal-backdrop{position:fixed;inset:0;background:#06152bd9;z-index:30;display:none;align-items:center;justify-content:center;padding:18px}.modal-backdrop.open{display:flex}.modal{background:white;width:min(560px,100%);max-height:92vh;overflow:auto;border-radius:20px;padding:25px;box-shadow:0 25px 80px #0005}.modal-head{display:flex;justify-content:space-between;gap:15px;align-items:start}.modal-head h2{margin:0;font-size:22px}.close{border:0;background:#edf2f8;border-radius:9px;padding:8px 11px;font-weight:800}.modal-sub{color:var(--muted);font-size:13px;line-height:1.5}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:18px}.field{display:grid;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:800;color:#43536a}.field input,.field select,.field textarea{width:100%;border:1px solid #d8e1ed;border-radius:10px;padding:11px 12px;background:#fff;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #1769e018}.summary{margin-top:16px;background:#f1f6fd;border-radius:12px;padding:13px;font-size:13px;line-height:1.7}.summary strong{color:var(--blue)}.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.form-actions .btn{flex:1}.notice{font-size:11px;color:#77869a;line-height:1.5;margin-top:13px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0c2544;color:#fff;padding:13px 18px;border-radius:12px;box-shadow:0 10px 30px #0003;z-index:50;display:none;font-size:13px;max-width:90%;text-align:center}
+@media(max-width:900px){.navlinks{gap:13px}.categories{grid-template-columns:repeat(3,1fr)}.hero-grid{grid-template-columns:1fr .8fr}.hero-art{transform:scale(.9)}.footer-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.topbar .wrap{justify-content:center}.topbar .wrap span:last-child{display:none}.nav{padding:12px 0}.brand{font-size:19px}.navlinks{display:none;position:absolute;left:0;right:0;top:65px;background:white;padding:18px 5%;border-bottom:1px solid var(--line);flex-direction:column}.navlinks.show{display:flex}.navright .btn{display:none}.menu-btn{display:block}.hero{padding:47px 0 40px}.hero-grid{grid-template-columns:1fr}.hero h1{font-size:42px}.hero p{font-size:14px}.hero-art{min-height:255px;transform:none;margin-top:5px}.device-card{width:290px;padding:16px}.device-screen{height:135px}.float-tag{font-size:10px;padding:9px 10px}.tag-one{left:0;top:20px}.tag-two{right:0;bottom:5px}.trust-grid{grid-template-columns:repeat(2,1fr);padding:16px 0}.trust-item{justify-content:flex-start;font-size:11px}.trust-icon{width:30px;height:30px}.section-head{display:block}.section-head>.btn{margin-top:15px}.categories{grid-template-columns:repeat(2,1fr);gap:10px}.category{padding:15px 12px}.cat-icon{width:42px;height:42px;font-size:21px}.product-grid{grid-template-columns:repeat(2,1fr);gap:11px}.product-visual{height:125px}.product-visual .emoji{font-size:57px}.product-body{padding:12px}.product h3{font-size:14px}.product-desc{font-size:11px;min-height:48px}.price{font-size:18px}.price-row{align-items:start;flex-direction:column}.product .btn{width:100%}section{padding:48px 0}.steps{grid-template-columns:repeat(2,1fr);gap:10px}.step{padding:16px}.cta-box{padding:26px 22px;display:block}.cta-box .btn{margin-top:18px}.footer-grid{grid-template-columns:1fr 1fr;gap:24px}.footer-brand{grid-column:1/-1}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.modal{padding:20px}.form-actions{flex-direction:column}}
+@media(max-width:370px){.product-grid{grid-template-columns:1fr}.product-visual{height:150px}.hero h1{font-size:36px}.categories{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap"><span>IT EQUIPMENT RENTALS • FLEXIBLE DAILY PLANS</span><span>Pan-India service through local partners (availability varies)</span></div></div>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#home" aria-label="ITRentHub home"><span class="logo">IT</span><span>ITRent<span>Hub</span></span></a>
+    <nav class="navlinks" id="navlinks"><a href="#home">Home</a><a href="#categories">Categories</a><a href="#products">Products</a><a href="#how">How It Works</a><a href="#contact">Contact</a></nav>
+    <div class="navright"><button class="btn btn-primary" onclick="scrollToProducts()">Explore Products →</button><button class="menu-btn" onclick="toggleMenu()" aria-label="Open menu">☰</button></div>
+  </div>
+</header>
+<main>
+<section class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><span class="dot"></span> YOUR IT RENTAL PARTNER</span>
+      <h1>Power your work.<br><em>Rent smarter.</em></h1>
+      <p>IT equipment for offices, teams, events and projects — with daily rental options and a booking process reviewed by our team.</p>
+      <div class="hero-actions"><a class="btn btn-light" href="#products">Browse equipment ↗</a><a class="btn btn-outline" href="#how">How it works</a></div>
+      <div class="hero-note">Rental prices, deposits and availability are confirmed before a booking is approved.</div>
+    </div>
+    <div class="hero-art" aria-label="Illustration of a laptop available for rent">
+      <div class="float-tag tag-one">Flexible rental<strong>Daily plans</strong></div>
+      <div class="device-card"><div class="device-top"><span>ITRentHub • Equipment</span><span>● ● ●</span></div><div class="device-screen"><div class="screen-mark">ITRentHub</div></div><div class="laptop-base"></div></div>
+      <div class="float-tag tag-two">Booking status<strong>Team approval</strong></div>
+    </div>
+  </div>
+</section>
+<div class="trustbar"><div class="wrap trust-grid">
+  <div class="trust-item"><span class="trust-icon">✓</span> Clear rental terms</div>
+  <div class="trust-item"><span class="trust-icon">₹</span> Daily pricing</div>
+  <div class="trust-item"><span class="trust-icon">↗</span> Partner-led delivery</div>
+  <div class="trust-item"><span class="trust-icon">☎</span> WhatsApp enquiry</div>
+</div></div>
+<section id="categories">
+  <div class="wrap">
+    <div class="section-head"><div><div class="kicker">Browse by category</div><h2>Equipment for every setup</h2><p>Find the right IT gear for work, training, business or events.</p></div></div>
+    <div class="categories">
+      <button class="category" onclick="filterCategory('Laptop')"><div class="cat-icon">💻</div><h3>Laptops</h3><p>Work & business laptops</p></button>
+      <button class="category" onclick="filterCategory('Computer')"><div class="cat-icon">🖥️</div><h3>Computers & Monitors</h3><p>Desktop, PC & displays</p></button>
+      <button class="category" onclick="filterCategory('Printer')"><div class="cat-icon">🖨️</div><h3>Printers & Scanners</h3><p>Print and scan equipment</p></button>
+      <button class="category" onclick="filterCategory('Projector')"><div class="cat-icon">📽️</div><h3>Projectors</h3><p>Meetings & presentations</p></button>
+      <button class="category" onclick="filterCategory('Networking')"><div class="cat-icon">🌐</div><h3>Networking & Power</h3><p>Routers, switches, UPS</p></button>
+    </div>
+  </div>
+</section>
+<section id="products" style="padding-top:12px">
+  <div class="wrap">
+    <div class="section-head"><div><div class="kicker">Explore equipment</div><h2>Popular rental products</h2><p>Demo products and sample prices — replace them with your real inventory and rates.</p></div><button class="btn btn-outline" onclick="resetFilter()">View all products ↗</button></div>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+</section>
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="section-head"><div><div class="kicker">Simple process</div><h2>Rent in four steps</h2><p>Your request is reviewed before the booking is confirmed.</p></div></div>
+    <div class="steps">
+      <div class="step"><div class="step-no">01</div><h3>Choose equipment</h3><p>Browse categories and select the item you need.</p></div>
+      <div class="step"><div class="step-no">02</div><h3>Send your request</h3><p>Enter dates, delivery PIN code and contact details.</p></div>
+      <div class="step"><div class="step-no">03</div><h3>Team approval</h3><p>We check availability, delivery partner and final charges.</p></div>
+      <div class="step"><div class="step-no">04</div><h3>Delivery & return</h3><p>Delivery and return arrangements are confirmed with you.</p></div>
+    </div>
+  </div>
+</section>
+<div class="cta"><div class="wrap"><div class="cta-box"><div><h2>Need equipment for your next project?</h2><p>Send a rental enquiry and our team can help confirm availability and pricing.</p></div><button class="btn btn-light" onclick="openGeneralEnquiry()">Send an enquiry →</button></div></div></div>
+</main>
+<footer id="contact">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand"><a class="brand" href="#home"><span class="logo">IT</span><span style="color:white">ITRent<span>Hub</span></span></a><p>IT equipment rental for businesses, teams, projects and events. We’re building a dependable rental network through local partners.</p></div>
+      <div><div class="footer-title">Explore</div><div class="footer-links"><a href="#categories">Product categories</a><a href="#products">Rental products</a><a href="#how">How it works</a></div></div>
+      <div><div class="footer-title">Customer support</div><div class="footer-links"><a href="javascript:openGeneralEnquiry()">Contact us</a><a href="javascript:showInfo('Rental Policy','Rental rates, minimum duration, security deposit, delivery charges and return terms will be set by the business owner.')">Rental policy</a><a href="javascript:showInfo('Cancellation & Refund','Cancellation and refund terms must be added by the business owner before accepting real bookings or payments.')">Cancellation & refund</a></div></div>
+      <div><div class="footer-title">Company details</div><div class="footer-links"><span>ITRentHub</span><span>Address: To be added</span><span>Phone: To be added</span><span>Email: To be added</span><span>WhatsApp: To be added</span></div></div>
+    </div>
+    <div class="footer-bottom"><span>© <span id="year"></span> ITRentHub. All rights reserved.</span><span>Demo website • Sample products and prices are not live offers.</span></div>
+  </div>
+</footer>
+<div class="modal-backdrop" id="bookingBackdrop" onclick="backdropClose(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head"><div><div class="kicker">Rental request</div><h2 id="modalTitle">Request a booking</h2></div><button class="close" onclick="closeModal()" aria-label="Close">✕</button></div>
+    <p class="modal-sub" id="modalProductInfo">Choose your rental dates and contact details. This demo saves the request only on this device.</p>
+    <form id="bookingForm">
+      <input type="hidden" id="selectedProduct">
+      <div class="form-grid">
+        <div class="field"><label for="customerName">Full name *</label><input id="customerName" required placeholder="Your name"></div>
+        <div class="field"><label for="customerPhone">Mobile number *</label><input id="customerPhone" required inputmode="tel" pattern="[0-9 +()-]{8,18}" placeholder="Phone number"></div>
+        <div class="field"><label for="startDate">Rental start date *</label><input id="startDate" type="date" required></div>
+        <div class="field"><label for="rentalDays">Rental duration *</label><select id="rentalDays" required onchange="updateSummary()"><option value="1">1 day</option><option value="2">2 days</option><option value="3">3 days</option><option value="7">7 days</option><option value="15">15 days</option><option value="30">30 days</option></select></div>
+        <div class="field"><label for="pinCode">Delivery PIN code *</label><input id="pinCode" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit PIN code"></div>
+        <div class="field"><label for="city">City / State *</label><input id="city" required placeholder="City, State"></div>
+        <div class="field full"><label for="address">Delivery address *</label><textarea id="address" rows="2" required placeholder="House/office, street, area"></textarea></div>
+        <div class="field"><label for="paymentPreference">Preferred payment</label><select id="paymentPreference"><option>Discuss after approval</option><option>Online payment</option><option>Cash (if available)</option></select></div>
+        <div class="field"><label for="contactPreference">Contact preference</label><select id="contactPreference"><option>Phone call</option><option>WhatsApp</option></select></div>
+      </div>
+      <div class="summary" id="bookingSummary">Sample estimate will appear here.</div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save demo request</button><button class="btn btn-outline" type="button" onclick="sendWhatsApp()">WhatsApp enquiry</button></div>
+      <div class="notice">Demo only: this form does not send data to the business, confirm stock, take payments or create a real booking. Connect a secure backend before using it with customers.</div>
+    </form>
+  </div>
+</div>
+<div class="modal-backdrop" id="infoBackdrop" onclick="infoBackdropClose(event)"><div class="modal"><div class="modal-head"><h2 id="infoTitle">Information</h2><button class="close" onclick="closeInfo()">✕</button></div><p id="infoText" class="modal-sub"></p><button class="btn btn-primary" onclick="closeInfo()">Got it</button></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const products = [
+ {id:1,name:"Business Laptop",category:"Laptop",emoji:"💻",tag:"Popular",desc:"For office work, training and temporary teams.",rent:650,deposit:3000},
+ {id:2,name:"Desktop Computer Set",category:"Computer",emoji:"🖥️",tag:"Office essential",desc:"Desktop setup for offices, labs and projects.",rent:500,deposit:2500},
+ {id:3,name:"Laser Printer",category:"Printer",emoji:"🖨️",tag:"Business",desc:"Reliable printing for temporary office needs.",rent:350,deposit:1500},
+ {id:4,name:"HD Projector",category:"Projector",emoji:"📽️",tag:"Events",desc:"For presentations, training and meetings.",rent:800,deposit:4000},
+ {id:5,name:"LED Monitor",category:"Computer",emoji:"🖥️",tag:"Flexible setup",desc:"Add a display to a temporary workstation.",rent:250,deposit:1000},
+ {id:6,name:"Wi-Fi Router",category:"Networking",emoji:"📡",tag:"Connectivity",desc:"Network equipment for office and event setups.",rent:150,deposit:700},
+ {id:7,name:"UPS Backup",category:"Networking",emoji:"🔋",tag:"Power backup",desc:"Backup power for selected IT equipment.",rent:220,deposit:1000},
+ {id:8,name:"Document Scanner",category:"Printer",emoji:"📄",tag:"Office",desc:"Scan documents for projects and temporary teams.",rent:300,deposit:1200},
+ {id:9,name:"Network Switch",category:"Networking",emoji:"🌐",tag:"IT infrastructure",desc:"Networking equipment for compatible setups.",rent:200,deposit:1000}
+];
+let activeProduct=null, activeFilter="All";
+const money=n=>"₹"+Number(n).toLocaleString("en-IN");
+function renderProducts(){
+ const list=activeFilter==="All"?products:products.filter(p=>p.category===activeFilter || (activeFilter==="Networking"&&p.category==="Networking"));
+ document.getElementById("productGrid").innerHTML=list.map(p=>`<article class="product"><div class="product-visual"><span class="badge">${p.tag}</span><span class="emoji">${p.emoji}</span></div><div class="product-body"><div class="product-type">${p.category}</div><h3>${p.name}</h3><div class="product-desc">${p.desc}</div><div class="price-row"><div><div class="price">${money(p.rent)} <small>/ day*</small></div><div class="deposit">Sample security: ${money(p.deposit)}</div></div><button class="btn btn-primary" onclick="openBooking(${p.id})">Request ↗</button></div></div></article>`).join("");
+}
+function filterCategory(cat){activeFilter=cat;renderProducts();document.getElementById("products").scrollIntoView({behavior:"smooth"});}
+function resetFilter(){activeFilter="All";renderProducts();}
+function scrollToProducts(){document.getElementById("products").scrollIntoView({behavior:"smooth"});}
+function toggleMenu(){document.getElementById("navlinks").classList.toggle("show")}
+function openBooking(id){activeProduct=products.find(p=>p.id===id);document.getElementById("selectedProduct").value=activeProduct.id;document.getElementById("modalTitle").textContent="Request: "+activeProduct.name;document.getElementById("modalProductInfo").textContent="Choose your rental dates and details. Sample prices only; availability and final charges require approval.";document.getElementById("bookingBackdrop").classList.add("open");document.body.style.overflow="hidden";const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());document.getElementById("startDate").min=d.toISOString().slice(0,10);if(!document.getElementById("startDate").value)document.getElementById("startDate").value=d.toISOString().slice(0,10);updateSummary();}
+function openGeneralEnquiry(){activeProduct=null;document.getElementById("selectedProduct").value="";document.getElementById("modalTitle").textContent="General rental enquiry";document.getElementById("modalProductInfo").textContent="Tell us what equipment you need. This demo saves the request only on this device.";document.getElementById("bookingBackdrop").classList.add("open");document.body.style.overflow="hidden";const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());document.getElementById("startDate").min=d.toISOString().slice(0,10);updateSummary();}
+function closeModal(){document.getElementById("bookingBackdrop").classList.remove("open");document.body.style.overflow=""}
+function backdropClose(e){if(e.target.id==="bookingBackdrop")closeModal()}
+function updateSummary(){const days=Number(document.getElementById("rentalDays").value||1);if(!activeProduct){document.getElementById("bookingSummary").innerHTML="Product: <strong>To be discussed</strong><br>Final rent, deposit and availability will be confirmed by the business owner.";return}document.getElementById("bookingSummary").innerHTML=`Product: <strong>${activeProduct.name}</strong><br>Sample rent: <strong>${money(activeProduct.rent*days)}</strong> for ${days} day(s)<br>Sample security deposit: <strong>${money(activeProduct.deposit)}</strong><br><span style="color:#66758a">Illustrative estimate only. Owner will set actual rates, taxes, delivery charges and deposit.</span>`}
+function sendWhatsApp(){showToast("WhatsApp number has not been added yet. Add the business number later.");}
+function showInfo(title,txt){document.getElementById("infoTitle").textContent=title;document.getElementById("infoText").textContent=txt;document.getElementById("infoBackdrop").classList.add("open");document.body.style.overflow="hidden"}
+function closeInfo(){document.getElementById("infoBackdrop").classList.remove("open");document.body.style.overflow=""}
+function infoBackdropClose(e){if(e.target.id==="infoBackdrop")closeInfo()}
+let toastTimer;function showToast(t){const el=document.getElementById("toast");el.textContent=t;el.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display="none",3200)}
+document.getElementById("bookingForm").addEventListener("submit",function(e){e.preventDefault();const req={requestId:"DEMO-"+Date.now().toString().slice(-7),product:activeProduct?activeProduct.name:"General enquiry",name:document.getElementById("customerName").value,phone:document.getElementById("customerPhone").value,startDate:document.getElementById("startDate").value,days:document.getElementById("rentalDays").value,pin:document.getElementById("pinCode").value,city:document.getElementById("city").value,address:document.getElementById("address").value,payment:document.getElementById("paymentPreference").value,contact:document.getElementById("contactPreference").value,status:"Pending demo request",createdAt:new Date().toISOString()};let arr=[];try{arr=JSON.parse(localStorage.getItem("itrenthub_demo_requests")||"[]")}catch(e){}arr.push(req);try{localStorage.setItem("itrenthub_demo_requests",JSON.stringify(arr));}catch(e){}closeModal();this.reset();showToast("Demo request saved on this device only. No real booking was sent.");});
+document.getElementById("year").textContent=new Date().getFullYear();
+renderProducts();
+</script>
+</body>
+</html>

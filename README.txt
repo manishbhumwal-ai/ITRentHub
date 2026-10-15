@@ -1,37 +1,24 @@
-ITRentHub Full Working Website (Node.js + SQLite)
+ITRentHub — starter website prototype
 
-WHAT'S INCLUDED
-- 52 rental products including home theatre, TV soundbar, home subwoofer, Bluetooth home speakers, wireless home speaker sets, bookshelf and tower speakers.
-- Customer registration/login, secure password hashing, session cookie, customer booking history and complaints.
-- Owner/Admin and Staff role-based panels. Staff can review bookings and complaints. Admin can create staff accounts, manage product prices/deposits/availability, and deactivate accounts.
-- Booking approve/reject/update, complaint status, CSV export, SQLite database.
-- Contact: Plot No. 123, Mohan Garden, Dwarka Mor, New Delhi–110059; WhatsApp 8126316906; email ankit.securityl@gmail.com.
+WHAT IS INCLUDED
+- index.html: responsive homepage and demo product catalogue
+- Daily rental and sample security-deposit display
+- Category filters
+- Demo booking enquiry form
+- Company address, phone, email and WhatsApp placeholders
+- Responsive layout for mobile and desktop
 
-REQUIREMENTS
-- Node.js 20 or newer and npm.
+IMPORTANT
+This is a FRONT-END DEMO, not a live rental business system yet.
+- Product prices and deposits are illustrative sample values. Replace them before public use.
+- The booking form saves demo requests only in the browser's local storage on the same device.
+- It does not send bookings to you, verify availability, provide secure admin login, connect partners, or take payments.
+- WhatsApp and contact details are placeholders until you provide business details.
+- Before accepting real customers/payments, a secure backend/database, admin authentication, payment gateway integration, privacy/terms policies and order notifications must be configured.
 
-RUN LOCALLY
-1. Extract this ZIP into a folder.
-2. Open a terminal in that folder and run: npm install
-3. Set environment variables before starting. Linux/macOS example:
-   export SESSION_SECRET='use-a-long-random-secret-here'
-   export ADMIN_NAME='ITRentHub Owner'
-   export ADMIN_EMAIL='your-owner-email@example.com'
-   export ADMIN_PASSWORD='Choose-A-Strong-Password-123'
-   npm start
-   Windows PowerShell example:
-   $env:SESSION_SECRET='use-a-long-random-secret-here'
-   $env:ADMIN_NAME='ITRentHub Owner'
-   $env:ADMIN_EMAIL='your-owner-email@example.com'
-   $env:ADMIN_PASSWORD='Choose-A-Strong-Password-123'
-   npm start
-4. Open http://localhost:3000
-5. Log in using the admin email/password you set above. These values are read only on first startup when no account with that email exists. Do not use the example password in production.
+HOW TO VIEW
+1. Extract the ZIP file.
+2. Open index.html in a modern browser to preview the page.
+3. To publish it, upload the files to a static hosting service such as GitHub Pages or Cloudflare Pages. Publishing instructions can be provided step by step.
 
-DEPLOYMENT NOTES
-- This is a real server-backed application, not a static HTML-only site. Uploading only public/index.html to Netlify will NOT enable accounts or bookings. Deploy to a Node.js host that supports persistent disk storage, or configure a managed database/session store before using ephemeral hosting.
-- Set NODE_ENV=production, a unique long SESSION_SECRET, ADMIN_EMAIL and ADMIN_PASSWORD in the hosting environment. Use HTTPS. Never publish .env or the data/ directory.
-- SQLite data lives in data/itrenthub.sqlite and sessions in data/sessions.sqlite. Back them up. The hosting platform must preserve the data directory across restarts/deploys.
-- Prices start at ₹0 (Rate on request); set real prices and deposits in Admin > Products & rates before accepting real orders. There is no online payment integration, live stock calendar, delivery integration or automated email/SMS yet. Booking status is not a payment or delivery confirmation.
-- Customer sign-up cannot assign admin/staff roles. Only an authenticated admin can create staff accounts. Admin account is provisioned from environment variables on first run.
-- Update contact details in public/index.html and server.js if they change.
+Designed as a first visual version of ITRentHub; additional production features can be built in later phases.

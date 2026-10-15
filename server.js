@@ -1,6 +1,6 @@
 const express = require("express");
 const session = require("express-session");
-const SQLiteStoreFactory = require("connect-sqlite3");
+const SQLiteStore = require("connect-sqlite3")(session);
 const Database = require("better-sqlite3");
 const bcrypt = require("bcryptjs");
 const helmet = require("helmet");
@@ -11,820 +11,416 @@ const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const production = process.env.NODE_ENV === "production";
-const SQLiteStore = SQLiteStoreFactory(session);
 
-app.disable("x-powered-by");
-app.set("trust proxy", 1);
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: "100kb" }));
-app.use(express.urlencoded({ extended: false, limit: "100kb" }));
-
-// Database
 const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 fs.mkdirSync(dataDir, { recursive: true });
 
-const db = new Database(
-  process.env.DB_PATH || path.join(dataDir, "itrenthub.sqlite")
-);
+const db = new Database(path.join(dataDir, "itrenthub.sqlite"));
 
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
+
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: false }));
+
+app.use(session({
+  store: new SQLiteStore({
+    db: "sessions.sqlite",
+    dir: dataDir
+  }),
+  secret: process.env.SESSION_SECRET || "local-development-secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  }
+}));
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  phone TEXT DEFAULT '',
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'customer',
-  active INTEGER NOT NULL DEFAULT 1,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  category TEXT DEFAULT 'Equipment',
+  category TEXT NOT NULL,
   description TEXT DEFAULT '',
-  daily_rate REAL DEFAULT 0,
-  deposit REAL DEFAULT 0,
+  daily_price REAL NOT NULL DEFAULT 0,
   image_url TEXT DEFAULT '',
-  available INTEGER DEFAULT 1,
+  available INTEGER NOT NULL DEFAULT 1,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  product_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
   start_date TEXT NOT NULL,
   end_date TEXT NOT NULL,
-  quantity INTEGER DEFAULT 1,
-  customer_note TEXT DEFAULT '',
-  staff_note TEXT DEFAULT '',
-  status TEXT DEFAULT 'pending',
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(user_id) REFERENCES users(id),
-  FOREIGN KEY(product_id) REFERENCES products(id)
-);
-
-CREATE TABLE IF NOT EXISTS complaints (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  subject TEXT NOT NULL,
-  message TEXT NOT NULL,
-  status TEXT DEFAULT 'open',
-  staff_note TEXT DEFAULT '',
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(user_id) REFERENCES users(id)
+  quantity INTEGER NOT NULL DEFAULT 1,
+  notes TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Pending',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 `);
 
-const emailOf = value => String(value || "").trim().toLowerCase();
+const count = db.prepare(
+  "SELECT COUNT(*) AS total FROM products"
+).get().total;
 
-function safeUser(user) {
-  if (!user) return null;
+if (count === 0) {
+  const insert = db.prepare(`
+    INSERT INTO products
+    (name, category, description, daily_price, image_url)
+    VALUES (?, ?, ?, ?, ?)
+  `);
 
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    phone: user.phone || "",
-    role: user.role
-  };
+  const products = [
+    [
+      "Business Laptop",
+      "Laptops",
+      "Laptop for office and business use.",
+      650,
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80"
+    ],
+    [
+      "Desktop Computer",
+      "Desktops",
+      "Desktop system for daily work.",
+      550,
+      "https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=900&q=80"
+    ],
+    [
+      "MacBook",
+      "Laptops",
+      "Laptop for creative and professional work.",
+      1200,
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=80"
+    ],
+    [
+      "LED Monitor",
+      "Monitors",
+      "Monitor for your workstation.",
+      250,
+      "https://images.unsplash.com/photo-1527443224154-c4a3942d3aced?auto=format&fit=crop&w=900&q=80"
+    ],
+    [
+      "Projector",
+      "Projectors",
+      "Projector for presentations and events.",
+      800,
+      "https://images.unsplash.com/photo-1585647347384-2593bc35786b?auto=format&fit=crop&w=900&q=80"
+    ],
+    [
+      "Laser Printer",
+      "Printers",
+      "Printer for office documents.",
+      400,
+      "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=900&q=80"
+    ]
+  ];
+
+  const seed = db.transaction(rows => {
+    rows.forEach(product => insert.run(...product));
+  });
+
+  seed(products);
 }
 
-function requireAuth(req, res, next) {
-  if (!req.session.user) {
-    return res.status(401).json({
-      error: "Please log in to continue."
-    });
-  }
-
-  const user = db.prepare(
-    "SELECT id,name,email,phone,role,active FROM users WHERE id=?"
-  ).get(req.session.user.id);
-
-  if (!user || !user.active) {
-    return res.status(401).json({
-      error: "Your account is unavailable. Please log in again."
-    });
-  }
-
-  req.session.user = safeUser(user);
-  next();
-}
-
-function requireStaff(req, res, next) {
-  if (
-    !req.session.user ||
-    !["admin", "staff"].includes(req.session.user.role)
-  ) {
-    return res.status(403).json({
-      error: "Admin or staff access required."
-    });
-  }
-
-  next();
-}
-
-function requireAdmin(req, res, next) {
-  if (!req.session.user || req.session.user.role !== "admin") {
-    return res.status(403).json({
-      error: "Admin access required."
-    });
-  }
-
-  next();
-}
-
-const loginLimiter = rateLimit({
+const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   standardHeaders: true,
   legacyHeaders: false
 });
 
-const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: 10,
-  standardHeaders: true,
-  legacyHeaders: false
-});
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.status(401).json({
+      error: "Please log in first."
+    });
+  }
 
-// Sessions
-if (production && !process.env.SESSION_SECRET) {
-  throw new Error("SESSION_SECRET must be configured in Render.");
+  next();
 }
 
-app.use(session({
-  name: "itrenthub.sid",
-  secret: process.env.SESSION_SECRET || "development-secret-change-this",
-  resave: false,
-  saveUninitialized: false,
-  store: new SQLiteStore({
-    db: "sessions.sqlite",
-    dir: dataDir
-  }),
-  cookie: {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: production,
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  }
-}));
+function sendBookingEmail(booking) {
+  const user = process.env.GMAIL_USER;
+  const password = process.env.GMAIL_APP_PASSWORD;
+  const recipient = process.env.ADMIN_EMAIL || user;
 
-// Gmail booking notification
-async function sendBookingEmail(booking) {
-  const {
-    GMAIL_USER,
-    GMAIL_APP_PASSWORD,
-    ADMIN_EMAIL
-  } = process.env;
-
-  if (!GMAIL_USER || !GMAIL_APP_PASSWORD || !ADMIN_EMAIL) {
-    console.warn(
-      "Gmail notification not configured. Check Render environment variables."
-    );
+  if (!user || !password || !recipient) {
+    console.log("Email settings are not configured.");
     return;
   }
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: GMAIL_USER,
-      pass: GMAIL_APP_PASSWORD
+      user,
+      pass: password
     }
   });
 
-  await transporter.sendMail({
-    from: `"ITRentHub" <${GMAIL_USER}>`,
-    to: ADMIN_EMAIL,
-    subject: `New ITRentHub Booking #${booking.id}`,
-    text: `
-New booking received!
-
-Booking ID: ${booking.id}
-Customer: ${booking.customer_name}
-Email: ${booking.customer_email}
-Phone: ${booking.customer_phone || "Not provided"}
-Equipment: ${booking.product_name}
-Start Date: ${booking.start_date}
-End Date: ${booking.end_date}
-Quantity: ${booking.quantity}
-Note: ${booking.customer_note || "None"}
-Status: ${booking.status}
-`
+  transporter.sendMail({
+    from: user,
+    to: recipient,
+    subject: "New ITRentHub booking request",
+    text:
+      `Booking ID: ${booking.id}\n` +
+      `Customer: ${booking.customer}\n` +
+      `Email: ${booking.email}\n` +
+      `Product: ${booking.product}\n` +
+      `Start date: ${booking.start_date}\n` +
+      `End date: ${booking.end_date}\n` +
+      `Quantity: ${booking.quantity}\n` +
+      `Notes: ${booking.notes || "None"}`
+  }).catch(error => {
+    console.error("Email failed:", error.message);
   });
 }
 
-// Health check
 app.get("/api/health", (req, res) => {
+  res.json({ ok: true, app: "ITRentHub" });
+});
+
+/* Public product browsing */
+app.get("/api/products", (req, res) => {
+  const search = String(req.query.q || "").trim();
+  const category = String(req.query.category || "").trim();
+
+  let sql = `
+    SELECT id, name, category, description,
+           daily_price, image_url, available
+    FROM products
+    WHERE available = 1
+  `;
+
+  const params = [];
+
+  if (category && category !== "All") {
+    sql += " AND category = ?";
+    params.push(category);
+  }
+
+  if (search) {
+    sql += " AND (name LIKE ? OR category LIKE ? OR description LIKE ?)";
+    const term = `%${search}%`;
+    params.push(term, term, term);
+  }
+
+  sql += " ORDER BY id DESC";
+
   res.json({
-    ok: true,
-    service: "ITRentHub"
+    products: db.prepare(sql).all(...params)
   });
 });
 
-// PUBLIC PRODUCTS — LOGIN NOT REQUIRED
-app.get("/api/products", (req, res) => {
-  const products = db.prepare(`
-    SELECT id,name,category,description,daily_rate,
-           deposit,image_url,available
+app.get("/api/categories", (req, res) => {
+  const categories = db.prepare(`
+    SELECT DISTINCT category
     FROM products
     WHERE available = 1
-    ORDER BY id DESC
-  `).all();
+    ORDER BY category
+  `).all().map(row => row.category);
 
-  res.json({ products });
+  res.json({ categories: ["All", ...categories] });
 });
 
-// Register
-app.post("/api/register", registerLimiter, async (req, res) => {
+/* Account registration */
+app.post("/api/register", limiter, async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const password = String(req.body.password || "");
+
+  if (
+    name.length < 2 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    password.length < 8
+  ) {
+    return res.status(400).json({
+      error: "Enter your name, valid email and password of at least 8 characters."
+    });
+  }
+
   try {
-    const name = String(req.body.name || "").trim();
-    const email = emailOf(req.body.email);
-    const phone = String(req.body.phone || "").trim();
-    const password = String(req.body.password || "");
-
-    if (name.length < 2) {
-      return res.status(400).json({
-        error: "Please enter your full name."
-      });
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({
-        error: "Please enter a valid email."
-      });
-    }
-
-    if (
-      password.length < 10 ||
-      !/[A-Za-z]/.test(password) ||
-      !/[0-9]/.test(password)
-    ) {
-      return res.status(400).json({
-        error: "Password must be at least 10 characters and include a letter and number."
-      });
-    }
-
     const hash = await bcrypt.hash(password, 12);
 
     const result = db.prepare(`
-      INSERT INTO users (name,email,phone,password_hash,role)
-      VALUES (?,?,?,?,'customer')
-    `).run(name, email, phone, hash);
+      INSERT INTO users (name, email, password_hash)
+      VALUES (?, ?, ?)
+    `).run(name, email, hash);
 
-    const user = db.prepare(`
-      SELECT id,name,email,phone,role
-      FROM users WHERE id=?
-    `).get(result.lastInsertRowid);
+    req.session.user = {
+      id: Number(result.lastInsertRowid),
+      name,
+      email,
+      role: "customer"
+    };
 
-    req.session.user = safeUser(user);
-
-    res.status(201).json({
-      user: req.session.user,
-      message: "Account created successfully."
-    });
+    res.status(201).json({ user: req.session.user });
   } catch (error) {
-    if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
-      return res.status(409).json({
-        error: "This email is already registered."
-      });
-    }
-
-    console.error(error);
-
-    res.status(500).json({
-      error: "Could not create account."
+    res.status(409).json({
+      error: "This email may already be registered."
     });
   }
 });
 
-// Login
-app.post("/api/login", loginLimiter, async (req, res) => {
-  try {
-    const email = emailOf(req.body.email);
-    const password = String(req.body.password || "");
+/* Login */
+app.post("/api/login", limiter, async (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const password = String(req.body.password || "");
 
-    const user = db.prepare(
-      "SELECT * FROM users WHERE email=?"
-    ).get(email);
+  const user = db.prepare(
+    "SELECT * FROM users WHERE email = ?"
+  ).get(email);
 
-    if (
-      !user ||
-      !user.active ||
-      !(await bcrypt.compare(password, user.password_hash))
-    ) {
-      return res.status(401).json({
-        error: "Email or password is incorrect."
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    return res.status(401).json({
+      error: "Incorrect email or password."
+    });
+  }
+
+  req.session.regenerate(error => {
+    if (error) {
+      return res.status(500).json({
+        error: "Unable to start your session."
       });
     }
 
-    req.session.regenerate(error => {
-      if (error) {
+    req.session.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
+    req.session.save(saveError => {
+      if (saveError) {
         return res.status(500).json({
-          error: "Could not start session."
+          error: "Unable to save your session."
         });
       }
 
-      req.session.user = safeUser(user);
-
-      res.json({
-        user: req.session.user,
-        message: "Logged in successfully."
-      });
+      res.json({ user: req.session.user });
     });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Login failed."
-    });
-  }
+  });
 });
 
-// Current user
 app.get("/api/me", (req, res) => {
-  res.json({
-    user: req.session.user || null
-  });
+  res.json({ user: req.session.user || null });
 });
 
-// Logout
 app.post("/api/logout", (req, res) => {
-  req.session.destroy(error => {
-    if (error) {
-      return res.status(500).json({
-        error: "Could not log out."
-      });
-    }
-
-    res.clearCookie("itrenthub.sid", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: production
-    });
-
-    res.json({ message: "Logged out." });
+  req.session.destroy(() => {
+    res.clearCookie("connect.sid");
+    res.json({ ok: true });
   });
 });
 
-// Create booking — LOGIN REQUIRED
-app.post("/api/bookings", requireAuth, async (req, res) => {
-  try {
-    const productId = Number(
-      req.body.product_id ?? req.body.productId
-    );
+/* Booking requires login */
+app.post("/api/bookings", requireLogin, (req, res) => {
+  const productId = Number(req.body.product_id);
+  const start = String(req.body.start_date || "");
+  const end = String(req.body.end_date || "");
+  const quantity = Number(req.body.quantity || 1);
+  const notes = String(req.body.notes || "").trim();
 
-    const startDate = String(
-      req.body.start_date ?? req.body.startDate ?? ""
-    ).trim();
+  const product = db.prepare(`
+    SELECT * FROM products
+    WHERE id = ? AND available = 1
+  `).get(productId);
 
-    const endDate = String(
-      req.body.end_date ?? req.body.endDate ?? ""
-    ).trim();
-
-    const quantity = Number(req.body.quantity || 1);
-
-    const note = String(
-      req.body.customer_note ?? req.body.note ?? ""
-    ).trim().slice(0, 1000);
-
-    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-
-    if (
-      !Number.isInteger(productId) ||
-      !datePattern.test(startDate) ||
-      !datePattern.test(endDate)
-    ) {
-      return res.status(400).json({
-        error: "Choose equipment and valid booking dates."
-      });
-    }
-
-    if (endDate < startDate) {
-      return res.status(400).json({
-        error: "End date must be on or after start date."
-      });
-    }
-
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
-      return res.status(400).json({
-        error: "Quantity must be between 1 and 100."
-      });
-    }
-
-    const product = db.prepare(`
-      SELECT * FROM products
-      WHERE id=? AND available=1
-    `).get(productId);
-
-    if (!product) {
-      return res.status(404).json({
-        error: "Equipment is not available."
-      });
-    }
-
-    const result = db.prepare(`
-      INSERT INTO bookings
-      (user_id,product_id,start_date,end_date,quantity,customer_note,status)
-      VALUES (?,?,?,?,?,?,'pending')
-    `).run(
-      req.session.user.id,
-      productId,
-      startDate,
-      endDate,
-      quantity,
-      note
-    );
-
-    const booking = db.prepare(`
-      SELECT b.*,
-             u.name AS customer_name,
-             u.email AS customer_email,
-             u.phone AS customer_phone,
-             p.name AS product_name
-      FROM bookings b
-      JOIN users u ON u.id=b.user_id
-      JOIN products p ON p.id=b.product_id
-      WHERE b.id=?
-    `).get(result.lastInsertRowid);
-
-    // Email failure should not cancel the saved booking.
-    sendBookingEmail(booking).catch(error => {
-      console.error("Booking email failed:", error.message);
-    });
-
-    res.status(201).json({
-      booking,
-      message: "Booking request submitted."
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Could not submit booking."
+  if (!product) {
+    return res.status(404).json({
+      error: "Product not found or unavailable."
     });
   }
+
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+  if (
+    !datePattern.test(start) ||
+    !datePattern.test(end) ||
+    Number.isNaN(Date.parse(start)) ||
+    Number.isNaN(Date.parse(end)) ||
+    end < start ||
+    start < new Date().toISOString().slice(0, 10)
+  ) {
+    return res.status(400).json({
+      error: "Please select valid rental dates."
+    });
+  }
+
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 50) {
+    return res.status(400).json({
+      error: "Quantity must be between 1 and 50."
+    });
+  }
+
+  const result = db.prepare(`
+    INSERT INTO bookings
+    (user_id, product_id, start_date, end_date, quantity, notes)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(
+    req.session.user.id,
+    productId,
+    start,
+    end,
+    quantity,
+    notes
+  );
+
+  const booking = {
+    id: Number(result.lastInsertRowid),
+    customer: req.session.user.name,
+    email: req.session.user.email,
+    product: product.name,
+    start_date: start,
+    end_date: end,
+    quantity,
+    notes
+  };
+
+  sendBookingEmail(booking);
+
+  res.status(201).json({
+    booking_id: booking.id,
+    message: "Booking request submitted."
+  });
 });
 
-// Customer bookings
-app.get("/api/my/bookings", requireAuth, (req, res) => {
+app.get("/api/bookings/mine", requireLogin, (req, res) => {
   const bookings = db.prepare(`
-    SELECT b.*,p.name AS product_name,
-           p.category,p.image_url,p.daily_rate,p.deposit
+    SELECT b.id, b.start_date, b.end_date, b.quantity,
+           b.notes, b.status, b.created_at,
+           p.name AS product_name, p.daily_price
     FROM bookings b
-    JOIN products p ON p.id=b.product_id
-    WHERE b.user_id=?
+    JOIN products p ON p.id = b.product_id
+    WHERE b.user_id = ?
     ORDER BY b.id DESC
   `).all(req.session.user.id);
 
   res.json({ bookings });
 });
 
-// Submit complaint
-app.post("/api/complaints", requireAuth, (req, res) => {
-  const subject = String(req.body.subject || "").trim().slice(0, 160);
-  const message = String(req.body.message || "").trim().slice(0, 3000);
+/* Website files */
+app.use(express.static(path.join(__dirname, "public")));
 
-  if (subject.length < 3 || message.length < 5) {
-    return res.status(400).json({
-      error: "Enter a subject and message."
-    });
-  }
-
-  const result = db.prepare(`
-    INSERT INTO complaints (user_id,subject,message)
-    VALUES (?,?,?)
-  `).run(req.session.user.id, subject, message);
-
-  res.status(201).json({
-    complaint: db.prepare(
-      "SELECT * FROM complaints WHERE id=?"
-    ).get(result.lastInsertRowid),
-    message: "Complaint submitted."
-  });
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Customer complaints
-app.get("/api/my/complaints", requireAuth, (req, res) => {
-  const complaints = db.prepare(`
-    SELECT * FROM complaints
-    WHERE user_id=?
-    ORDER BY id DESC
-  `).all(req.session.user.id);
-
-  res.json({ complaints });
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`ITRentHub running on port ${PORT}`);
 });
-
-// Admin/staff overview
-app.get("/api/manage/overview", requireStaff, (req, res) => {
-  const counts = {
-    bookings: db.prepare(
-      "SELECT COUNT(*) AS n FROM bookings"
-    ).get().n,
-
-    pendingBookings: db.prepare(
-      "SELECT COUNT(*) AS n FROM bookings WHERE status='pending'"
-    ).get().n,
-
-    complaints: db.prepare(
-      "SELECT COUNT(*) AS n FROM complaints"
-    ).get().n,
-
-    customers: db.prepare(
-      "SELECT COUNT(*) AS n FROM users WHERE role='customer'"
-    ).get().n,
-
-    products: db.prepare(
-      "SELECT COUNT(*) AS n FROM products"
-    ).get().n
-  };
-
-  const bookings = db.prepare(`
-    SELECT b.*,u.name AS customer_name,
-           u.email AS customer_email,u.phone AS customer_phone,
-           p.name AS product_name
-    FROM bookings b
-    JOIN users u ON u.id=b.user_id
-    JOIN products p ON p.id=b.product_id
-    ORDER BY b.id DESC LIMIT 500
-  `).all();
-
-  const complaints = db.prepare(`
-    SELECT c.*,u.name AS customer_name,u.email AS customer_email
-    FROM complaints c
-    JOIN users u ON u.id=c.user_id
-    ORDER BY c.id DESC LIMIT 500
-  `).all();
-
-  const isAdmin = req.session.user.role === "admin";
-
-  const customers = isAdmin
-    ? db.prepare(`
-        SELECT id,name,email,phone,role,active,created_at
-        FROM users WHERE role='customer'
-        ORDER BY id DESC
-      `).all()
-    : [];
-
-  const staff = isAdmin
-    ? db.prepare(`
-        SELECT id,name,email,phone,role,active,created_at
-        FROM users WHERE role IN ('admin','staff')
-        ORDER BY id DESC
-      `).all()
-    : [];
-
-  const products = isAdmin
-    ? db.prepare("SELECT * FROM products ORDER BY id DESC").all()
-    : [];
-
-  res.json({
-    counts,
-    bookings,
-    complaints,
-    customers,
-    staff,
-    products
-  });
-});
-
-// Update booking status
-app.patch("/api/manage/bookings/:id", requireStaff, (req, res) => {
-  const allowed = [
-    "pending",
-    "approved",
-    "rejected",
-    "completed",
-    "cancelled"
-  ];
-
-  const status = String(req.body.status || "").toLowerCase();
-  const staffNote = String(
-    req.body.staffNote ?? req.body.staff_note ?? ""
-  ).trim().slice(0, 1000);
-
-  if (!allowed.includes(status)) {
-    return res.status(400).json({
-      error: "Invalid booking status."
-    });
-  }
-
-  const result = db.prepare(`
-    UPDATE bookings
-    SET status=?,staff_note=?
-    WHERE id=?
-  `).run(status, staffNote, Number(req.params.id));
-
-  if (!result.changes) {
-    return res.status(404).json({
-      error: "Booking not found."
-    });
-  }
-
-  res.json({
-    booking: db.prepare(
-      "SELECT * FROM bookings WHERE id=?"
-    ).get(Number(req.params.id)),
-    message: "Booking updated."
-  });
-});
-
-// Update complaint
-app.patch("/api/manage/complaints/:id", requireStaff, (req, res) => {
-  const status = String(req.body.status || "open").toLowerCase();
-  const staffNote = String(
-    req.body.staffNote ?? req.body.staff_note ?? ""
-  ).trim().slice(0, 1000);
-
-  if (!["open", "in_progress", "resolved", "closed"].includes(status)) {
-    return res.status(400).json({
-      error: "Invalid complaint status."
-    });
-  }
-
-  const result = db.prepare(`
-    UPDATE complaints
-    SET status=?,staff_note=?
-    WHERE id=?
-  `).run(status, staffNote, Number(req.params.id));
-
-  if (!result.changes) {
-    return res.status(404).json({
-      error: "Complaint not found."
-    });
-  }
-
-  res.json({
-    complaint: db.prepare(
-      "SELECT * FROM complaints WHERE id=?"
-    ).get(Number(req.params.id)),
-    message: "Complaint updated."
-  });
-});
-
-// Create staff account — admin only
-app.post("/api/manage/staff", requireAdmin, async (req, res) => {
-  try {
-    const name = String(req.body.name || "").trim();
-    const email = emailOf(req.body.email);
-    const phone = String(req.body.phone || "").trim();
-    const password = String(req.body.password || "");
-
-    if (
-      name.length < 2 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    ) {
-      return res.status(400).json({
-        error: "Enter a valid name and email."
-      });
-    }
-
-    if (
-      password.length < 10 ||
-      !/[A-Za-z]/.test(password) ||
-      !/[0-9]/.test(password)
-    ) {
-      return res.status(400).json({
-        error: "Password must be at least 10 characters and include a letter and number."
-      });
-    }
-
-    const hash = await bcrypt.hash(password, 12);
-
-    const result = db.prepare(`
-      INSERT INTO users (name,email,phone,password_hash,role)
-      VALUES (?,?,?,?,'staff')
-    `).run(name, email, phone, hash);
-
-    res.status(201).json({
-      user: safeUser(db.prepare(`
-        SELECT id,name,email,phone,role
-        FROM users WHERE id=?
-      `).get(result.lastInsertRowid))
-    });
-  } catch (error) {
-    if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
-      return res.status(409).json({
-        error: "This email is already registered."
-      });
-    }
-
-    console.error(error);
-
-    res.status(500).json({
-      error: "Could not create staff account."
-    });
-  }
-});
-
-// Activate/deactivate user — admin only
-app.patch("/api/manage/users/:id", requireAdmin, (req, res) => {
-  const id = Number(req.params.id);
-
-  if (id === req.session.user.id) {
-    return res.status(400).json({
-      error: "You cannot deactivate your own account."
-    });
-  }
-
-  const active =
-    req.body.active === true ||
-    req.body.active === 1 ||
-    req.body.active === "1" ||
-    req.body.active === "true"
-      ? 1 : 0;
-
-  const result = db.prepare(
-    "UPDATE users SET active=? WHERE id=?"
-  ).run(active, id);
-
-  if (!result.changes) {
-    return res.status(404).json({
-      error: "User not found."
-    });
-  }
-
-  res.json({
-    message: active ? "User activated." : "User deactivated."
-  });
-});
-
-// Update product — admin only
-app.patch("/api/manage/products/:id", requireAdmin, (req, res) => {
-  const id = Number(req.params.id);
-  const current = db.prepare(
-    "SELECT * FROM products WHERE id=?"
-  ).get(id);
-
-  if (!current) {
-    return res.status(404).json({
-      error: "Product not found."
-    });
-  }
-
-  const name = String(req.body.name ?? current.name).trim();
-  const category = String(
-    req.body.category ?? current.category
-  ).trim();
-
-  const description = String(
-    req.body.description ?? current.description
-  ).trim().slice(0, 2000);
-
-  const dailyRate = Number(
-    req.body.daily_rate ?? req.body.dailyRate ?? current.daily_rate
-  );
-
-  const deposit = Number(req.body.deposit ?? current.deposit);
-
-  const imageUrl = String(
-    req.body.image_url ?? req.body.imageUrl ?? current.image_url
-  ).trim().slice(0, 1000);
-
-  const available = req.body.available === undefined
-    ? current.available
-    : (
-        req.body.available === true ||
-        req.body.available === 1 ||
-        req.body.available === "1" ||
-        req.body.available === "true"
-      ) ? 1 : 0;
-
-  if (
-    !name ||
-    !category ||
-    !Number.isFinite(dailyRate) ||
-    dailyRate < 0 ||
-    !Number.isFinite(deposit) ||
-    deposit < 0
-  ) {
-    return res.status(400).json({
-      error: "Check product name, category, rate and deposit."
-    });
-  }
-
-  db.prepare(`
-    UPDATE products
-    SET name=?,category=?,description=?,daily_rate=?,
-        deposit=?,image_url=?,available=?
-    WHERE id=?
-  `).run(
-    name,
-    category,
-    description,
-    dailyRate,
-    deposit,
-    imageUrl,
-    available,
-    id
-  );
-
-    res.json({
-    product: db.prepare(
-      "SELECT * FR
